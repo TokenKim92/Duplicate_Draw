@@ -1,47 +1,33 @@
+import BaseCanvas from '../lib/baseCanvas.js';
 import { PI2 } from './utils.js';
 
-export default class BackgroundGenerator {
-  #canvas;
-  #ctx;
-  #maxRandomRadius = 200;
-  #minRandomRadius = 10;
+export default class BackgroundGenerator extends BaseCanvas {
+  static MAX_RADIUS = 200;
+  static MIN_RADIUS = 10;
+
+  #maxRadius = BackgroundGenerator.MAX_RADIUS;
 
   constructor() {
-    this.#canvas = document.createElement('canvas');
-    this.#ctx = this.#canvas.getContext('2d');
-    document.body.append(this.#canvas);
+    super();
   }
 
-  resize = (stageWidth, stageHeight) => {
-    this.#canvas.width = stageWidth;
-    this.#canvas.height = stageHeight;
-  };
-
-  drawParticle = (particle) => {
+  drawParticle(particle) {
     let randomRadius;
 
     randomRadius =
-      Math.random() * this.#maxRandomRadius + this.#minRandomRadius;
+      Math.random() * this.#maxRadius + BackgroundGenerator.MIN_RADIUS;
 
-    this.#ctx.beginPath();
-    this.#ctx.fillStyle = particle.color;
-    this.#ctx.arc(particle.x, particle.y, randomRadius, 0, PI2);
-    this.#ctx.fill();
-  };
-
-  get maxRandomRadius() {
-    return this.#maxRandomRadius;
+    this.ctx.beginPath();
+    this.ctx.fillStyle = particle.color;
+    this.ctx.arc(particle.x, particle.y, randomRadius, 0, PI2);
+    this.ctx.fill();
   }
 
-  set maxRandomRadius(maxRandomRadius) {
-    this.#maxRandomRadius = maxRandomRadius;
+  get maxRadius() {
+    return this.#maxRadius;
   }
 
-  get minRandomRadius() {
-    return this.#minRandomRadius;
-  }
-
-  set minRandomRadius(minRandomRadius) {
-    this.#minRandomRadius = minRandomRadius;
+  set maxRadius(maxRadius) {
+    this.#maxRadius = maxRadius;
   }
 }

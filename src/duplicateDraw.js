@@ -98,8 +98,8 @@ export default class DuplicateDraw {
     this.#speedForMaxRadius *= DuplicateDraw.SETTING_VELOCITY;
     this.#speedForCirclesPerFrame *= DuplicateDraw.SETTING_VELOCITY;
 
-    if (this.#bgGenerator.maxRandomRadius > this.#bgGenerator.minRandomRadius) {
-      this.#bgGenerator.maxRandomRadius -= this.#speedForMaxRadius;
+    if (this.#bgGenerator.maxRadius > BackgroundGenerator.MIN_RADIUS) {
+      this.#bgGenerator.maxRadius -= this.#speedForMaxRadius;
     }
 
     if (this.#circlesPerFrame < DuplicateDraw.MAX_CIRCLES_PER_FRAME) {
