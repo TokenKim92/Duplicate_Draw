@@ -1,66 +1,59 @@
+import BaseCanvas from '../../KineticTypography01/lib/baseCanvas.js';
+import FontFormat from '../lib/fontFormat.js';
+import Rect from '../lib/rect.js';
 import { PI2 } from './utils.js';
 
-export default class ImageGenerator {
+export default class ImageGenerator extends BaseCanvas {
+  static LINE_COLOR = 'rgb(0, 0, 0)';
   static BG_THICKNESS = 6;
   static BG_HALF_THICKNESS = ImageGenerator.BG_THICKNESS / 2;
+  static BG_COLOR = 'rgba(255, 255, 255, 0.9)';
+  static TITLE = 'GOGH';
+  static SUB_TITLE = "Inspired by 'Interactive Developer'";
 
-  #canvas;
-  #ctx;
   #img;
-  #imgPos;
+  #imgRect;
   #imgToStageRatio;
-  #imgMovingSpeed;
-  #stageWidth;
-  #stageHeight;
+  #movingSpeed;
+  #titleFont;
+  #subTitleFont;
 
-  constructor(img, imgPosInfo, imgMovingSpeed) {
-    this.#canvas = document.createElement('canvas');
-    this.#ctx = this.#canvas.getContext('2d');
-    document.body.append(this.#canvas);
+  constructor(img, posInfo, movingSpeed) {
+    super();
 
     this.#img = img;
-    this.#imgPos = {
-      x: imgPosInfo.x,
-      y: 0,
-      width: imgPosInfo.width,
-      height: imgPosInfo.width * (this.#img.height / this.#img.width),
-    };
-    this.#imgMovingSpeed = imgMovingSpeed;
+    this.#imgRect = new Rect(posInfo.x, 0, posInfo.width, posInfo.width * (this.#img.height / this.#img.width)); // prettier-ignore
+    this.#movingSpeed = movingSpeed;
+    this.#titleFont = new FontFormat(200, 300, 'Hind');
+    this.#subTitleFont = new FontFormat(200, 40, 'Hind');
   }
 
-  resize(stageWidth, stageHeight) {
-    this.#stageWidth = stageWidth;
-    this.#stageHeight = stageHeight;
+  resize() {
+    super.resize();
 
-    this.#canvas.width = stageWidth;
-    this.#canvas.height = stageHeight;
-
-    this.#imgPos.y = stageHeight;
+    this.#imgRect.y = this.stageHeight;
 
     this.#imgToStageRatio = {
-      x: stageWidth / this.#imgPos.width,
-      y: stageHeight / this.#imgPos.height,
+      x: this.stageWidth / this.#imgRect.width,
+      y: this.stageHeight / this.#imgRect.height,
     };
   }
 
   getImgParticleInfo() {
-    this.#ctx.drawImage(
+    this.ctx.drawImage(
       this.#img,
-      0, 0,
-      this.#img.width, this.#img.height,
-      0, 0,
-      this.#imgPos.width, this.#imgPos.height
+      0, 0, this.#img.width, this.#img.height,
+      0, 0, this.#imgRect.width, this.#imgRect.height
     ); // prettier-ignore
 
-    const imageData = this.#ctx.getImageData(
-      0, 0, this.#imgPos.width, this.#imgPos.height).data; // prettier-ignore
+    const imageData = this.ctx.getImageData(0, 0, this.#imgRect.width, this.#imgRect.height).data; // prettier-ignore
 
     let particles = [];
     let pixelIndex;
 
-    for (let y = 0; y < this.#imgPos.height; y++) {
-      for (let x = 0; x < this.#imgPos.width; x++) {
-        pixelIndex = (x + y * this.#imgPos.width) * 4;
+    for (let y = 0; y < this.#imgRect.height; y++) {
+      for (let x = 0; x < this.#imgRect.width; x++) {
+        pixelIndex = (x + y * this.#imgRect.width) * 4;
 
         particles.push({
           x: x * this.#imgToStageRatio.x,
@@ -74,72 +67,89 @@ export default class ImageGenerator {
   }
 
   drawLineToParticle(particle) {
-    this.#ctx.strokeStyle = '#000000';
-    this.#ctx.beginPath();
+    this.ctx.strokeStyle = ImageGenerator.LINE_COLOR;
+    this.ctx.beginPath();
 
-    this.#ctx.moveTo(particle.x, particle.y);
-    this.#ctx.lineTo(
-      this.#imgPos.x + particle.x / this.#imgToStageRatio.x,
-      this.#imgPos.y + particle.y / this.#imgToStageRatio.y
+    this.ctx.moveTo(particle.x, particle.y);
+    this.ctx.lineTo(
+      this.#imgRect.x + particle.x / this.#imgToStageRatio.x,
+      this.#imgRect.y + particle.y / this.#imgToStageRatio.y
     );
-    this.#ctx.stroke();
+    this.ctx.stroke();
 
-    this.#ctx.fillStyle = particle.color;
-    this.#ctx.beginPath();
-    this.#ctx.arc(
-      this.#imgPos.x + particle.x / this.#imgToStageRatio.x,
-      this.#imgPos.y + particle.y / this.#imgToStageRatio.y,
+    this.ctx.fillStyle = particle.color;
+    this.ctx.beginPath();
+    this.ctx.arc(
+      this.#imgRect.x + particle.x / this.#imgToStageRatio.x,
+      this.#imgRect.y + particle.y / this.#imgToStageRatio.y,
       4,
       0,
-      PI2,
-      false
+      PI2
     );
 
-    this.#ctx.fill();
+    this.ctx.fill();
   }
 
   drawImage = () => {
-    this.#ctx.font = '200 40px Hind';
-    this.#ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    this.#ctx.textBaseline = 'middle';
+    this.#drawTitle();
+    this.#drawSubTitle();
+    this.#drawBackground();
 
-    let text = "Inspired by 'Interactive Developer'";
-    let fontPos = this.#ctx.measureText(text);
-    this.#ctx.fillText(text, (this.#stageWidth - fontPos.width) / 2, 50);
-
-    this.#ctx.font = '200 300px Hind';
-    text = 'GOGH';
-    fontPos = this.#ctx.measureText(text);
-    this.#ctx.fillText(
-      text,
-      (this.#stageWidth - fontPos.width) / 2,
-      (this.#stageHeight + fontPos.actualBoundingBoxAscent - fontPos.actualBoundingBoxDescent) / 2
-    ); // prettier-ignore
-
-    this.#ctx.fillStyle = '#ffffff';
-    this.#ctx.fillRect(
-      this.#imgPos.x - ImageGenerator.BG_HALF_THICKNESS,
-      this.#imgPos.y - ImageGenerator.BG_HALF_THICKNESS,
-      this.#imgPos.width + ImageGenerator.BG_THICKNESS,
-      this.#imgPos.height + ImageGenerator.BG_THICKNESS
-    );
-
-    this.#ctx.drawImage(
+    this.ctx.drawImage(
       this.#img,
-      0, 0,
-      this.#img.width, this.#img.height,
-      this.#imgPos.x, this.#imgPos.y,
-      this.#imgPos.width, this.#imgPos.height
+      0, 0, this.#img.width, this.#img.height,
+      this.#imgRect.x, this.#imgRect.y, this.#imgRect.width, this.#imgRect.height
     ); // prettier-ignore
 
-    this.#imgPos.y -= this.#imgMovingSpeed;
-    if (this.#imgPos.y + this.#imgPos.height * 2 < 0) {
-      return false;
-    }
-    return true;
+    this.#imgRect.y -= this.#movingSpeed;
+
+    return this.#isDisappeared ? false : true;
   };
 
-  clearStage() {
-    this.#ctx.clearRect(0, 0, this.#stageWidth, this.#stageHeight);
+  #drawTitle() {
+    this.ctx.save();
+
+    this.ctx.font = this.#titleFont.font;
+    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
+
+    const fontPos = this.ctx.measureText(ImageGenerator.TITLE);
+    this.ctx.fillText(
+      ImageGenerator.TITLE,
+      (this.stageWidth - fontPos.width) / 2,
+      (this.stageHeight + fontPos.actualBoundingBoxAscent - fontPos.actualBoundingBoxDescent) / 2
+    ); // prettier-ignore
+
+    this.ctx.restore();
+  }
+
+  #drawSubTitle() {
+    this.ctx.save();
+
+    this.ctx.font = this.#subTitleFont.font;
+    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
+    this.ctx.textBaseline = 'middle';
+
+    const fontPos = this.ctx.measureText(ImageGenerator.SUB_TITLE);
+    this.ctx.fillText(ImageGenerator.SUB_TITLE, (this.stageWidth - fontPos.width) / 2, 50); // prettier-ignore
+
+    this.ctx.restore();
+  }
+
+  #drawBackground() {
+    this.ctx.save();
+
+    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
+    this.ctx.fillRect(
+      this.#imgRect.x - ImageGenerator.BG_HALF_THICKNESS,
+      this.#imgRect.y - ImageGenerator.BG_HALF_THICKNESS,
+      this.#imgRect.width + ImageGenerator.BG_THICKNESS,
+      this.#imgRect.height + ImageGenerator.BG_THICKNESS
+    );
+
+    this.ctx.restore();
+  }
+
+  get #isDisappeared() {
+    return this.#imgRect.y + this.#imgRect.height * 2 < 0;
   }
 }

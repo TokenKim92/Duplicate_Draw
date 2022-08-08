@@ -77,7 +77,7 @@ export default class DuplicateDraw {
     if (isRepeatable) {
       window.requestAnimationFrame(this.animate);
     } else {
-      this.#imageGenerator.clearStage();
+      this.#imageGenerator.clearCanvas();
       this.#imageGenerator.drawImage();
     }
   };
@@ -122,7 +122,7 @@ export default class DuplicateDraw {
   }
 
   onFPSTimeToDraw() {
-    this.#imageGenerator.clearStage();
+    this.#imageGenerator.clearCanvas();
     const isRepeatable = this.#imageGenerator.drawImage();
 
     let randomIndex = 0;
