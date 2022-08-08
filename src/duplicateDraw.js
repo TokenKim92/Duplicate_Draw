@@ -1,8 +1,9 @@
-import BackgroundGenerator from './backgroundGenerator.js';
 import ImageGenerator from './imageGenerator.js';
+import BaseCanvas from '../lib/baseCanvas.js';
 import Rect from '../lib/rect.js';
+import { PI2 } from './utils.js';
 
-export default class DuplicateDraw {
+export default class DuplicateDraw extends BaseCanvas {
   static MAX_CIRCLES_PER_FRAME = 10;
 
   static IMG_POS_LEFT = 150;
@@ -11,9 +12,11 @@ export default class DuplicateDraw {
 
   static FPS_SETTING = 5;
   static FPS_TIME_SETTING = 1000 / DuplicateDraw.FPS_SETTING;
-  static SETTING_VELOCITY = 1.01;
+  static SETTING_VELOCITY = 1.03;
 
-  #bgGenerator;
+  static MAX_RADIUS = 200;
+  static MIN_RADIUS = 10;
+
   #imageGenerator;
   #prevTimeForSpeed = 0;
   #maxParticlesIndex;
@@ -23,18 +26,34 @@ export default class DuplicateDraw {
   #speedForCirclesPerFrame = 0.2;
 
   #isImgLoaded = false;
+  #maxRadius = DuplicateDraw.MAX_RADIUS;
 
   constructor(imgUrl) {
-    this.#bgGenerator = new BackgroundGenerator();
+    super();
+
     const img = new Image();
     img.src = imgUrl;
-
     img.onload = () => {
-      this.onImgLoad(img);
+      this.#onImgLoad(img);
     };
   }
 
-  onImgLoad(img) {
+  destroy() {
+    this.#imageGenerator && this.#imageGenerator.destroy();
+    super.destroy();
+  }
+
+  resize() {
+    super.resize();
+    this.#imageGenerator.resize();
+  }
+
+  animate(curTime) {
+    this.#checkFPSTimeForSetting(curTime);
+    this.#drawBackground();
+  }
+
+  #onImgLoad(img) {
     const imgRect = new Rect(DuplicateDraw.IMG_POS_LEFT, 0, DuplicateDraw.IMAGE_WIDTH, 0); // prettier-ignore
     this.#imageGenerator = new ImageGenerator(img, imgRect, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
 
@@ -45,17 +64,7 @@ export default class DuplicateDraw {
     this.#isImgLoaded = true;
   }
 
-  resize() {
-    this.#imageGenerator.resize();
-    this.#bgGenerator.resize();
-  }
-
-  animate(curTime) {
-    this.checkFPSTimeForSetting(curTime);
-    this.drawBackground();
-  }
-
-  checkFPSTimeForSetting(curTime) {
+  #checkFPSTimeForSetting(curTime) {
     if (!this.#prevTimeForSpeed) {
       this.#prevTimeForSpeed = curTime;
     }
@@ -63,16 +72,16 @@ export default class DuplicateDraw {
     if (curTime - this.#prevTimeForSpeed > DuplicateDraw.FPS_TIME_SETTING) {
       this.#prevTimeForSpeed = curTime;
 
-      this.onFPSTimeForSetting();
+      this.#onFPSTimeForSetting();
     }
   }
 
-  onFPSTimeForSetting() {
+  #onFPSTimeForSetting() {
     this.#speedForMaxRadius *= DuplicateDraw.SETTING_VELOCITY;
     this.#speedForCirclesPerFrame *= DuplicateDraw.SETTING_VELOCITY;
 
-    if (this.#bgGenerator.maxRadius > BackgroundGenerator.MIN_RADIUS) {
-      this.#bgGenerator.maxRadius -= this.#speedForMaxRadius;
+    if (this.#maxRadius > DuplicateDraw.MIN_RADIUS) {
+      this.#maxRadius -= this.#speedForMaxRadius;
     }
 
     if (this.#circlesPerFrame < DuplicateDraw.MAX_CIRCLES_PER_FRAME) {
@@ -80,7 +89,7 @@ export default class DuplicateDraw {
     }
   }
 
-  drawBackground() {
+  #drawBackground() {
     this.#imageGenerator.clearCanvas();
     this.#imageGenerator.drawImage();
 
@@ -91,9 +100,20 @@ export default class DuplicateDraw {
       randomIndex = Math.round(Math.random() * this.#maxParticlesIndex);
       particle = this.#particles[randomIndex];
 
-      this.#bgGenerator.drawParticle(particle);
+      this.#drawParticle(particle);
       this.#imageGenerator.isDisappeared || this.#imageGenerator.drawLineToParticle(particle); // prettier-ignore
     }
+  }
+
+  #drawParticle(particle) {
+    let randomRadius;
+
+    randomRadius = Math.random() * this.#maxRadius + DuplicateDraw.MIN_RADIUS;
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = particle.color;
+    this.ctx.arc(particle.x, particle.y, randomRadius, 0, PI2);
+    this.ctx.fill();
   }
 
   get isImgLoaded() {

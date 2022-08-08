@@ -1,4 +1,4 @@
-import BaseCanvas from '../../KineticTypography01/lib/baseCanvas.js';
+import BaseCanvas from '../lib/baseCanvas.js';
 import FontFormat from '../lib/fontFormat.js';
 import Rect from '../lib/rect.js';
 import { PI2 } from './utils.js';
