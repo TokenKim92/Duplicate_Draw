@@ -24,8 +24,8 @@ export default class ImageGenerator extends BaseCanvas {
     this.#img = img;
     this.#imgRect = new Rect(posInfo.x, 0, posInfo.width, posInfo.width * (this.#img.height / this.#img.width)); // prettier-ignore
     this.#movingSpeed = movingSpeed;
-    this.#titleFont = new FontFormat(200, 300, 'Hind');
-    this.#subTitleFont = new FontFormat(200, 40, 'Hind');
+    this.#titleFont = new FontFormat(800, 300, 'Arial');
+    this.#subTitleFont = new FontFormat(600, 40, 'Arial');
   }
 
   resize() {
@@ -67,6 +67,8 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   drawLineToParticle(particle) {
+    this.ctx.save();
+
     this.ctx.strokeStyle = ImageGenerator.LINE_COLOR;
     this.ctx.beginPath();
 
@@ -88,6 +90,8 @@ export default class ImageGenerator extends BaseCanvas {
     );
 
     this.ctx.fill();
+
+    this.ctx.restore();
   }
 
   drawImage = () => {
@@ -102,8 +106,6 @@ export default class ImageGenerator extends BaseCanvas {
     ); // prettier-ignore
 
     this.#imgRect.y -= this.#movingSpeed;
-
-    return this.#isDisappeared ? false : true;
   };
 
   #drawTitle() {
@@ -149,7 +151,7 @@ export default class ImageGenerator extends BaseCanvas {
     this.ctx.restore();
   }
 
-  get #isDisappeared() {
-    return this.#imgRect.y + this.#imgRect.height * 2 < 0;
+  get isDisappeared() {
+    return this.#imgRect.y + this.#imgRect.height * 1.5 < 0;
   }
 }
