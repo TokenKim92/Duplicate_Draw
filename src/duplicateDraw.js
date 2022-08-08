@@ -1,18 +1,7 @@
 import BackgroundGenerator from './backgroundGenerator.js';
 import ImageGenerator from './imageGenerator.js';
 
-export default class DuplicateDrawBuilder {
-  imgUrl(imgUrl) {
-    this.imgUrl = imgUrl;
-    return this;
-  }
-
-  build() {
-    return new DuplicateDraw(this.imgUrl);
-  }
-}
-
-class DuplicateDraw {
+export default class DuplicateDraw {
   static MAX_CIRCLES_PER_FRAME = 10;
 
   static IMG_POS_LEFT = 150;
