@@ -28,14 +28,15 @@ export default class DuplicateDraw extends BaseCanvas {
   #isImgLoaded = false;
   #maxRadius = DuplicateDraw.MAX_RADIUS;
 
-  constructor(imgUrl) {
+  constructor(img) {
     super();
 
-    const img = new Image();
-    img.src = imgUrl;
-    img.onload = () => {
-      this.#onImgLoad(img);
-    };
+    const imgRect = new Rect(DuplicateDraw.IMG_POS_LEFT, 0, DuplicateDraw.IMAGE_WIDTH, 0); // prettier-ignore
+    this.#imageGenerator = new ImageGenerator(img, imgRect, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
+
+    this.resize();
+    this.#particles = this.#imageGenerator.getImgParticleInfo();
+    this.#maxParticlesIndex = this.#particles.length - 1;
   }
 
   destroy() {
@@ -45,23 +46,12 @@ export default class DuplicateDraw extends BaseCanvas {
 
   resize() {
     super.resize();
-    this.#imageGenerator.resize();
+    this.#imageGenerator && this.#imageGenerator.resize();
   }
 
   animate(curTime) {
     this.#checkFPSTimeForSetting(curTime);
     this.#drawBackground();
-  }
-
-  #onImgLoad(img) {
-    const imgRect = new Rect(DuplicateDraw.IMG_POS_LEFT, 0, DuplicateDraw.IMAGE_WIDTH, 0); // prettier-ignore
-    this.#imageGenerator = new ImageGenerator(img, imgRect, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
-
-    this.resize();
-    this.#particles = this.#imageGenerator.getImgParticleInfo();
-    this.#maxParticlesIndex = this.#particles.length - 1;
-
-    this.#isImgLoaded = true;
   }
 
   #checkFPSTimeForSetting(curTime) {
@@ -90,18 +80,20 @@ export default class DuplicateDraw extends BaseCanvas {
   }
 
   #drawBackground() {
-    this.#imageGenerator.clearCanvas();
-    this.#imageGenerator.drawImage();
+    if (this.#imageGenerator) {
+      this.#imageGenerator.clearCanvas();
+      this.#imageGenerator.drawImage();
 
-    let randomIndex = 0;
-    let particle;
+      let randomIndex = 0;
+      let particle;
 
-    for (let i = 0; i < this.#circlesPerFrame; i++) {
-      randomIndex = Math.round(Math.random() * this.#maxParticlesIndex);
-      particle = this.#particles[randomIndex];
+      for (let i = 0; i < this.#circlesPerFrame; i++) {
+        randomIndex = Math.round(Math.random() * this.#maxParticlesIndex);
+        particle = this.#particles[randomIndex];
 
-      this.#drawParticle(particle);
-      this.#imageGenerator.isDisappeared || this.#imageGenerator.drawLineToParticle(particle); // prettier-ignore
+        this.#drawParticle(particle);
+        this.#imageGenerator.isDisappeared || this.#imageGenerator.drawLineToParticle(particle); // prettier-ignore
+      }
     }
   }
 
