@@ -40,13 +40,13 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   getImgParticleInfo() {
-    this.ctx.drawImage(
+    this.drawImage(
       this.#img,
       0, 0, this.#img.width, this.#img.height,
       0, 0, this.#imgRect.width, this.#imgRect.height
     ); // prettier-ignore
 
-    const imageData = this.ctx.getImageData(0, 0, this.#imgRect.width, this.#imgRect.height).data; // prettier-ignore
+    const imageData = this.getImageData(0, 0, this.#imgRect.width, this.#imgRect.height).data; // prettier-ignore
 
     let particles = [];
     let pixelIndex;
@@ -67,21 +67,21 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   drawLineToParticle(particle) {
-    this.ctx.save();
+    this.saveCanvas();
 
-    this.ctx.strokeStyle = ImageGenerator.LINE_COLOR;
-    this.ctx.beginPath();
+    this.setStrokeStyle(ImageGenerator.LINE_COLOR);
+    this.beginPath();
 
-    this.ctx.moveTo(particle.x, particle.y);
-    this.ctx.lineTo(
+    this.moveTo(particle.x, particle.y);
+    this.lineTo(
       this.#imgRect.x + particle.x / this.#imgToStageRatio.x,
       this.#imgRect.y + particle.y / this.#imgToStageRatio.y
     );
-    this.ctx.stroke();
+    this.stroke();
 
-    this.ctx.fillStyle = particle.color;
-    this.ctx.beginPath();
-    this.ctx.arc(
+    this.setFillStyle(particle.color);
+    this.beginPath();
+    this.arc(
       this.#imgRect.x + particle.x / this.#imgToStageRatio.x,
       this.#imgRect.y + particle.y / this.#imgToStageRatio.y,
       4,
@@ -89,66 +89,66 @@ export default class ImageGenerator extends BaseCanvas {
       PI2
     );
 
-    this.ctx.fill();
+    this.fill();
 
-    this.ctx.restore();
+    this.restoreCanvas();
   }
 
-  drawImage = () => {
+  drawMovingImage() {
     this.#drawTitle();
     this.#drawSubTitle();
     this.#drawBackground();
 
-    this.ctx.drawImage(
+    this.drawImage(
       this.#img,
       0, 0, this.#img.width, this.#img.height,
       this.#imgRect.x, this.#imgRect.y, this.#imgRect.width, this.#imgRect.height
     ); // prettier-ignore
 
     this.#imgRect.y -= this.#movingSpeed;
-  };
+  }
 
   #drawTitle() {
-    this.ctx.save();
+    this.saveCanvas();
 
-    this.ctx.font = this.#titleFont.font;
-    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
+    this.setFont(this.#titleFont.font);
+    this.setFillStyle(ImageGenerator.BG_COLOR);
 
-    const fontPos = this.ctx.measureText(ImageGenerator.TITLE);
-    this.ctx.fillText(
+    const fontPos = this.measureText(ImageGenerator.TITLE);
+    this.fillText(
       ImageGenerator.TITLE,
       (this.stageWidth - fontPos.width) / 2,
       (this.stageHeight + fontPos.actualBoundingBoxAscent - fontPos.actualBoundingBoxDescent) / 2
     ); // prettier-ignore
 
-    this.ctx.restore();
+    this.restoreCanvas();
   }
 
   #drawSubTitle() {
-    this.ctx.save();
+    this.saveCanvas();
 
-    this.ctx.font = this.#subTitleFont.font;
-    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
-    this.ctx.textBaseline = 'middle';
+    this.setFont(this.#subTitleFont.font);
+    this.setFillStyle(ImageGenerator.BG_COLOR);
+    this.setTextBaseline('middle');
 
-    const fontPos = this.ctx.measureText(ImageGenerator.SUB_TITLE);
-    this.ctx.fillText(ImageGenerator.SUB_TITLE, (this.stageWidth - fontPos.width) / 2, 50); // prettier-ignore
+    const fontPos = this.measureText(ImageGenerator.SUB_TITLE);
+    this.fillText(ImageGenerator.SUB_TITLE, (this.stageWidth - fontPos.width) / 2, 50); // prettier-ignore
 
-    this.ctx.restore();
+    this.restoreCanvas();
   }
 
   #drawBackground() {
-    this.ctx.save();
+    this.saveCanvas();
 
-    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
-    this.ctx.fillRect(
+    this.setFillStyle(ImageGenerator.BG_COLOR);
+    this.fillRect(
       this.#imgRect.x - ImageGenerator.BG_HALF_THICKNESS,
       this.#imgRect.y - ImageGenerator.BG_HALF_THICKNESS,
       this.#imgRect.width + ImageGenerator.BG_THICKNESS,
       this.#imgRect.height + ImageGenerator.BG_THICKNESS
     );
 
-    this.ctx.restore();
+    this.restoreCanvas();
   }
 
   get isDisappeared() {

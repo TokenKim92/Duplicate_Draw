@@ -18,15 +18,13 @@ export default class DuplicateDraw extends BaseCanvas {
   static MIN_RADIUS = 10;
 
   #imageGenerator;
-  #prevTimeForSpeed = 0;
   #maxParticlesIndex;
   #particles;
-  #circlesPerFrame = 1;
-  #speedForMaxRadius = 2;
-  #speedForCirclesPerFrame = 0.2;
-
-  #isImgLoaded = false;
-  #maxRadius = DuplicateDraw.MAX_RADIUS;
+  #prevTimeForSpeed;
+  #circlesPerFrame;
+  #speedForMaxRadius;
+  #speedForCirclesPerFrame;
+  #maxRadius;
 
   constructor(img) {
     super();
@@ -37,16 +35,34 @@ export default class DuplicateDraw extends BaseCanvas {
     this.resize();
     this.#particles = this.#imageGenerator.getImgParticleInfo();
     this.#maxParticlesIndex = this.#particles.length - 1;
+
+    this.init();
   }
 
-  destroy() {
-    this.#imageGenerator && this.#imageGenerator.destroy();
-    super.destroy();
+  init() {
+    this.#prevTimeForSpeed = 0;
+    this.#circlesPerFrame = 1;
+    this.#speedForMaxRadius = 2;
+    this.#speedForCirclesPerFrame = 0.2;
+    this.#maxRadius = DuplicateDraw.MAX_RADIUS;
+  }
+
+  bringToStage() {
+    this.init();
+    this.resize();
+
+    super.bringToStage();
+    this.#imageGenerator.bringToStage();
+  }
+
+  removeFromStage() {
+    this.#imageGenerator.removeFromStage();
+    super.removeFromStage();
   }
 
   resize() {
     super.resize();
-    this.#imageGenerator && this.#imageGenerator.resize();
+    this.#imageGenerator.resize();
   }
 
   animate(curTime) {
@@ -82,7 +98,7 @@ export default class DuplicateDraw extends BaseCanvas {
   #drawBackground() {
     if (this.#imageGenerator) {
       this.#imageGenerator.clearCanvas();
-      this.#imageGenerator.drawImage();
+      this.#imageGenerator.drawMovingImage();
 
       let randomIndex = 0;
       let particle;
@@ -102,13 +118,9 @@ export default class DuplicateDraw extends BaseCanvas {
 
     randomRadius = Math.random() * this.#maxRadius + DuplicateDraw.MIN_RADIUS;
 
-    this.ctx.beginPath();
-    this.ctx.fillStyle = particle.color;
-    this.ctx.arc(particle.x, particle.y, randomRadius, 0, PI2);
-    this.ctx.fill();
-  }
-
-  get isImgLoaded() {
-    return this.#isImgLoaded;
+    this.beginPath();
+    this.setFillStyle(particle.color);
+    this.arc(particle.x, particle.y, randomRadius, 0, PI2);
+    this.fill();
   }
 }

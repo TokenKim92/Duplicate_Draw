@@ -1,4 +1,4 @@
-import './lib/duplication.min.js';
+import './webpack/dist/duplication.js';
 
 const imgUrl = 'imgs/gogh1.jpg';
 
