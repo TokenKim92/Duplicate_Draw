@@ -11,21 +11,41 @@ export default class ImageGenerator extends BaseCanvas {
   static TITLE = 'GOGH';
   static SUB_TITLE = "Inspired by 'Interactive Developer'";
 
-  #img;
+  #imageList = [];
+  #currentImage;
+  #posInfo;
   #imgRect;
   #imgToStageRatio;
   #movingSpeed;
   #titleFont;
   #subTitleFont;
+  #currentImageIndex;
 
-  constructor(img, posInfo, movingSpeed) {
+  constructor(imageList, posInfo, movingSpeed) {
     super();
 
-    this.#img = img;
-    this.#imgRect = new Rect(posInfo.x, 0, posInfo.width, posInfo.width * (this.#img.height / this.#img.width)); // prettier-ignore
+    this.#imageList = imageList;
+    this.#posInfo = posInfo;
     this.#movingSpeed = movingSpeed;
     this.#titleFont = new FontFormat(800, 300, 'Arial');
     this.#subTitleFont = new FontFormat(600, 40, 'Arial');
+    this.#currentImageIndex = 0;
+
+    this.nextImage();
+  }
+
+  nextImage() {
+    this.#currentImage = this.#imageList[this.#currentImageIndex];
+
+    this.#imgRect = new Rect(
+      this.#posInfo.x,
+      this.stageHeight,
+      this.#posInfo.width,
+      this.#posInfo.width * (this.#currentImage.height / this.#currentImage.width)
+    ); // prettier-ignore
+
+    this.#currentImageIndex =
+      (this.#currentImageIndex + 1) % this.#imageList.length;
   }
 
   resize() {
@@ -41,8 +61,8 @@ export default class ImageGenerator extends BaseCanvas {
 
   getImgParticleInfo() {
     this.drawImage(
-      this.#img,
-      0, 0, this.#img.width, this.#img.height,
+      this.#currentImage,
+      0, 0, this.#currentImage.width, this.#currentImage.height,
       0, 0, this.#imgRect.width, this.#imgRect.height
     ); // prettier-ignore
 
@@ -100,8 +120,8 @@ export default class ImageGenerator extends BaseCanvas {
     this.#drawBackground();
 
     this.drawImage(
-      this.#img,
-      0, 0, this.#img.width, this.#img.height,
+      this.#currentImage,
+      0, 0, this.#currentImage.width, this.#currentImage.height,
       this.#imgRect.x, this.#imgRect.y, this.#imgRect.width, this.#imgRect.height
     ); // prettier-ignore
 
@@ -152,6 +172,6 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   get isDisappeared() {
-    return this.#imgRect.y + this.#imgRect.height * 1.5 < 0;
+    return this.#imgRect.y + this.#imgRect.height * 2 < 0;
   }
 }
