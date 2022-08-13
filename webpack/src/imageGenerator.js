@@ -39,13 +39,12 @@ export default class ImageGenerator extends BaseCanvas {
 
     this.#imgRect = new Rect(
       this.#posInfo.x,
-      this.stageHeight,
+      0,
       this.#posInfo.width,
       this.#posInfo.width * (this.#currentImage.height / this.#currentImage.width)
     ); // prettier-ignore
-
-    this.#currentImageIndex =
-      (this.#currentImageIndex + 1) % this.#imageList.length;
+    this.#currentImageIndex = (this.#currentImageIndex + 1) % this.#imageList.length; // prettier-ignore
+    this.resize();
   }
 
   resize() {
@@ -53,10 +52,21 @@ export default class ImageGenerator extends BaseCanvas {
 
     this.#imgRect.y = this.stageHeight;
 
-    this.#imgToStageRatio = {
-      x: this.stageWidth / this.#imgRect.width,
-      y: this.stageHeight / this.#imgRect.height,
-    };
+    if (this.#currentImage.width > this.#currentImage.height) {
+      const ratio = this.stageWidth / this.#imgRect.width;
+      this.#imgToStageRatio = {
+        x: 0,
+        y: Math.round((this.stageHeight - this.#imgRect.height * ratio) / 2),
+        ratio: ratio,
+      };
+    } else {
+      const ratio = this.stageHeight / this.#imgRect.height;
+      this.#imgToStageRatio = {
+        x: Math.round((this.stageWidth - this.#imgRect.width * ratio) / 2),
+        y: 0,
+        ratio: ratio,
+      };
+    }
   }
 
   getImgParticleInfo() {
@@ -67,7 +77,6 @@ export default class ImageGenerator extends BaseCanvas {
     ); // prettier-ignore
 
     const imageData = this.getImageData(0, 0, this.#imgRect.width, this.#imgRect.height).data; // prettier-ignore
-
     let particles = [];
     let pixelIndex;
 
@@ -76,8 +85,8 @@ export default class ImageGenerator extends BaseCanvas {
         pixelIndex = (x + y * this.#imgRect.width) * 4;
 
         particles.push({
-          x: x * this.#imgToStageRatio.x,
-          y: y * this.#imgToStageRatio.y,
+          x: x * this.#imgToStageRatio.ratio + this.#imgToStageRatio.x,
+          y: y * this.#imgToStageRatio.ratio + this.#imgToStageRatio.y,
           color: `rgb(${imageData[pixelIndex]}, ${imageData[pixelIndex + 1]}, ${imageData[pixelIndex + 2]})`,
         }); // prettier-ignore
       }
@@ -92,22 +101,18 @@ export default class ImageGenerator extends BaseCanvas {
     this.setStrokeStyle(ImageGenerator.LINE_COLOR);
     this.beginPath();
 
+    const posOnImage = {
+      x : this.#imgRect.x + (particle.x - this.#imgToStageRatio.x) / this.#imgToStageRatio.ratio,
+      y: this.#imgRect.y + (particle.y - this.#imgToStageRatio.y) / this.#imgToStageRatio.ratio,
+    }; // prettier-ignore
+
     this.moveTo(particle.x, particle.y);
-    this.lineTo(
-      this.#imgRect.x + particle.x / this.#imgToStageRatio.x,
-      this.#imgRect.y + particle.y / this.#imgToStageRatio.y
-    );
+    this.lineTo(posOnImage.x, posOnImage.y);
     this.stroke();
 
     this.setFillStyle(particle.color);
     this.beginPath();
-    this.arc(
-      this.#imgRect.x + particle.x / this.#imgToStageRatio.x,
-      this.#imgRect.y + particle.y / this.#imgToStageRatio.y,
-      4,
-      0,
-      PI2
-    );
+    this.arc(posOnImage.x, posOnImage.y, 4, 0, PI2);
 
     this.fill();
 

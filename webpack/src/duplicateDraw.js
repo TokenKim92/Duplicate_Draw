@@ -33,10 +33,7 @@ export default class DuplicateDraw extends BaseCanvas {
     this.#imageGenerator = new ImageGenerator(imgList, imgRect, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
 
     this.resize();
-    this.#particles = this.#imageGenerator.getImgParticleInfo();
-    this.#maxParticlesIndex = this.#particles.length - 1;
-
-    this.init();
+    this.#setParticles();
   }
 
   init() {
@@ -63,11 +60,14 @@ export default class DuplicateDraw extends BaseCanvas {
   resize() {
     super.resize();
     this.#imageGenerator.resize();
+
+    this.init();
   }
 
   animate(curTime) {
     this.#checkFPSTimeForSetting(curTime);
     this.#drawBackground();
+    this.#imageGenerator.isDisappeared && this.#changeNextImage();
   }
 
   #checkFPSTimeForSetting(curTime) {
@@ -102,14 +102,15 @@ export default class DuplicateDraw extends BaseCanvas {
 
       let randomIndex = 0;
       let particle;
+      let isOnceInTow;
 
       for (let i = 0; i < this.#circlesPerFrame; i++) {
         randomIndex = Math.round(Math.random() * this.#maxParticlesIndex);
         particle = this.#particles[randomIndex];
+        isOnceInTow = i % 2;
 
         this.#drawParticle(particle);
-        this.#imageGenerator.drawLineToParticle(particle);
-        this.#imageGenerator.isDisappeared && this.#changeNextImage();
+        isOnceInTow && this.#imageGenerator.drawLineToParticle(particle);
       }
     }
   }
@@ -126,9 +127,16 @@ export default class DuplicateDraw extends BaseCanvas {
   }
 
   #changeNextImage() {
-    this.init();
+    this.clearCanvas();
     this.#imageGenerator.nextImage();
+    this.init();
+    this.#setParticles();
+  }
+
+  #setParticles() {
     this.#particles = [];
     this.#particles = this.#imageGenerator.getImgParticleInfo();
+    this.#maxParticlesIndex =
+      this.#particles.length > 1 ? this.#particles.length - 1 : 0;
   }
 }
