@@ -1,7 +1,7 @@
 import './webpack/dist/duplication.js';
 
 window.onload = () => {
-  const imgUrls = ['./imgs/gogh1.jpg', './imgs/gogh2.jpg'];
+  const imgUrls = ['./imgs/gogh1.jpg', './imgs/gogh2.jpg', './imgs/gogh3.jpg'];
 
   new AppBuilder().imgUrl(imgUrls).build();
 };

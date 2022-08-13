@@ -10,8 +10,8 @@ export default class DuplicateDraw extends BaseCanvas {
   static IMAGE_WIDTH = 300;
   static IMAGE_MOVING_SPEED = 2;
 
-  static FPS_SETTING = 10;
-  static FPS_TIME_SETTING = 1000 / DuplicateDraw.FPS_SETTING;
+  static FPS = 10;
+  static FPS_TIME = 1000 / DuplicateDraw.FPS;
   static SETTING_VELOCITY = 1.03;
 
   static MAX_RADIUS = 200;
@@ -33,7 +33,6 @@ export default class DuplicateDraw extends BaseCanvas {
     this.#imageGenerator = new ImageGenerator(imgList, imgRect, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
 
     this.resize();
-    this.#setParticles();
   }
 
   init() {
@@ -42,10 +41,14 @@ export default class DuplicateDraw extends BaseCanvas {
     this.#speedForMaxRadius = 2;
     this.#speedForCirclesPerFrame = 0.2;
     this.#maxRadius = DuplicateDraw.MAX_RADIUS;
+
+    this.#particles = [];
+    this.#particles = this.#imageGenerator.getImgParticleInfo();
+    this.#maxParticlesIndex =
+      this.#particles.length > 1 ? this.#particles.length - 1 : 0;
   }
 
   bringToStage() {
-    this.init();
     this.resize();
 
     super.bringToStage();
@@ -65,32 +68,41 @@ export default class DuplicateDraw extends BaseCanvas {
   }
 
   animate(curTime) {
-    this.#checkFPSTimeForSetting(curTime);
+    this.#checkFPSTime(curTime);
     this.#drawBackground();
     this.#imageGenerator.isDisappeared && this.#changeNextImage();
   }
 
-  #checkFPSTimeForSetting(curTime) {
+  #checkFPSTime(curTime) {
     if (!this.#prevTimeForSpeed) {
       this.#prevTimeForSpeed = curTime;
+      return;
     }
 
-    if (curTime - this.#prevTimeForSpeed > DuplicateDraw.FPS_TIME_SETTING) {
-      this.#prevTimeForSpeed = curTime;
+    const isOnFPSTime = DuplicateDraw.FPS_TIME < curTime - this.#prevTimeForSpeed; //prettier-ignore
+    if (isOnFPSTime) {
+      this.#setMaxRadius();
+      this.#setCircleNumberPerFrame();
 
-      this.#onFPSTimeForSetting();
+      this.#prevTimeForSpeed = curTime;
     }
   }
 
-  #onFPSTimeForSetting() {
+  #setMaxRadius() {
     this.#speedForMaxRadius *= DuplicateDraw.SETTING_VELOCITY;
-    this.#speedForCirclesPerFrame *= DuplicateDraw.SETTING_VELOCITY;
 
-    if (this.#maxRadius > DuplicateDraw.MIN_RADIUS) {
+    if (this.#maxRadius > DuplicateDraw.MIN_RADIUS + this.#speedForMaxRadius) {
       this.#maxRadius -= this.#speedForMaxRadius;
     }
+  }
 
-    if (this.#circlesPerFrame < DuplicateDraw.MAX_CIRCLES_PER_FRAME) {
+  #setCircleNumberPerFrame() {
+    this.#speedForCirclesPerFrame *= DuplicateDraw.SETTING_VELOCITY;
+
+    if (
+      this.#circlesPerFrame <
+      DuplicateDraw.MAX_CIRCLES_PER_FRAME - this.#speedForCirclesPerFrame
+    ) {
       this.#circlesPerFrame += this.#speedForCirclesPerFrame;
     }
   }
@@ -128,15 +140,8 @@ export default class DuplicateDraw extends BaseCanvas {
 
   #changeNextImage() {
     this.clearCanvas();
+
     this.#imageGenerator.nextImage();
     this.init();
-    this.#setParticles();
-  }
-
-  #setParticles() {
-    this.#particles = [];
-    this.#particles = this.#imageGenerator.getImgParticleInfo();
-    this.#maxParticlesIndex =
-      this.#particles.length > 1 ? this.#particles.length - 1 : 0;
   }
 }
