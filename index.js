@@ -1,4 +1,4 @@
-import './webpack/dist/duplication.js';
+import './lib/duplication.min.js';
 
 window.onload = () => {
   const imgUrls = ['./imgs/gogh1.jpg', './imgs/gogh2.jpg', './imgs/gogh3.jpg'];

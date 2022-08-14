@@ -13,22 +13,19 @@ export default class ImageGenerator extends BaseCanvas {
 
   #imageList = [];
   #currentImage;
-  #posInfo;
   #imgRect;
   #imgToStageRatio;
   #movingSpeed;
   #titleFont;
   #subTitleFont;
   #currentImageIndex;
+  #prevSizeMode = BaseCanvas.INIT_MODE;
 
-  constructor(imageList, posInfo, movingSpeed) {
+  constructor(imageList, movingSpeed) {
     super();
 
     this.#imageList = imageList;
-    this.#posInfo = posInfo;
     this.#movingSpeed = movingSpeed;
-    this.#titleFont = new FontFormat(800, 300, 'Arial');
-    this.#subTitleFont = new FontFormat(600, 40, 'Arial');
     this.#currentImageIndex = 0;
 
     this.nextImage();
@@ -36,13 +33,6 @@ export default class ImageGenerator extends BaseCanvas {
 
   nextImage() {
     this.#currentImage = this.#imageList[this.#currentImageIndex];
-
-    this.#imgRect = new Rect(
-      this.#posInfo.x,
-      0,
-      this.#posInfo.width,
-      this.#posInfo.width * (this.#currentImage.height / this.#currentImage.width)
-    ); // prettier-ignore
     this.#currentImageIndex = (this.#currentImageIndex + 1) % this.#imageList.length; // prettier-ignore
     this.resize();
   }
@@ -50,7 +40,54 @@ export default class ImageGenerator extends BaseCanvas {
   resize() {
     super.resize();
 
-    this.#imgRect.y = this.stageHeight;
+    this.#initFont();
+    this.#setImageRect();
+  }
+
+  #initFont() {
+    const sizeMode = this.getSizeMode();
+
+    if (sizeMode === this.#prevSizeMode) {
+      return;
+    }
+
+    this.#prevSizeMode = sizeMode;
+    let titleFontSize = 0;
+    let subTitleFontSize = 0;
+
+    switch (sizeMode) {
+      case BaseCanvas.SMALL_MODE:
+        titleFontSize = 100;
+        subTitleFontSize = 20;
+        break;
+      case BaseCanvas.REGULAR_MODE:
+        titleFontSize = 200;
+        subTitleFontSize = 30;
+        break;
+      case BaseCanvas.MEDIUM_MODE:
+        titleFontSize = 300;
+        subTitleFontSize = 40;
+        break;
+      case BaseCanvas.LARGE_MODE:
+        titleFontSize = 400;
+        subTitleFontSize = 50;
+        break;
+      default:
+        throw new Error('This canvas size is not possible!');
+    }
+
+    this.#titleFont = new FontFormat(800, titleFontSize, 'Arial');
+    this.#subTitleFont = new FontFormat(600, subTitleFontSize, 'Arial');
+  }
+
+  #setImageRect() {
+    const targetImageWidth = Math.floor(this.stageWidth / 4);
+    const leftPos = targetImageWidth / 2;
+
+    this.#imgRect = new Rect(
+      leftPos, this.stageHeight,
+      targetImageWidth, targetImageWidth * (this.#currentImage.height / this.#currentImage.width)
+    ); // prettier-ignore
 
     if (this.#currentImage.width > this.#currentImage.height) {
       const ratio = this.stageWidth / this.#imgRect.width;
@@ -177,6 +214,6 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   get isDisappeared() {
-    return this.#imgRect.y + this.#imgRect.height * 2 < 0;
+    return this.#imgRect.y + this.#imgRect.height * 1.5 < 0;
   }
 }

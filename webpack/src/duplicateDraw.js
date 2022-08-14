@@ -1,21 +1,14 @@
 import ImageGenerator from './imageGenerator.js';
 import BaseCanvas from '../lib/baseCanvas.js';
-import Rect from '../lib/rect.js';
 import { PI2 } from './utils.js';
 
 export default class DuplicateDraw extends BaseCanvas {
   static MAX_CIRCLES_PER_FRAME = 10;
-
-  static IMG_POS_LEFT = 150;
-  static IMAGE_WIDTH = 300;
   static IMAGE_MOVING_SPEED = 2;
 
   static FPS = 10;
   static FPS_TIME = 1000 / DuplicateDraw.FPS;
   static SETTING_VELOCITY = 1.03;
-
-  static MAX_RADIUS = 200;
-  static MIN_RADIUS = 10;
 
   #imageGenerator;
   #maxParticlesIndex;
@@ -25,12 +18,12 @@ export default class DuplicateDraw extends BaseCanvas {
   #speedForMaxRadius;
   #speedForCirclesPerFrame;
   #maxRadius;
+  #minRadius;
 
   constructor(imgList) {
     super();
 
-    const imgRect = new Rect(DuplicateDraw.IMG_POS_LEFT, 0, DuplicateDraw.IMAGE_WIDTH, 0); // prettier-ignore
-    this.#imageGenerator = new ImageGenerator(imgList, imgRect, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
+    this.#imageGenerator = new ImageGenerator(imgList, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
 
     this.resize();
   }
@@ -40,7 +33,8 @@ export default class DuplicateDraw extends BaseCanvas {
     this.#circlesPerFrame = 1;
     this.#speedForMaxRadius = 2;
     this.#speedForCirclesPerFrame = 0.2;
-    this.#maxRadius = DuplicateDraw.MAX_RADIUS;
+    this.#maxRadius = this.getSizeMode() === BaseCanvas.SMALL_MODE ? 100 : 200;
+    this.#minRadius = this.getSizeMode() === BaseCanvas.SMALL_MODE ? 5 : 10;
 
     this.#particles = [];
     this.#particles = this.#imageGenerator.getImgParticleInfo();
@@ -91,7 +85,7 @@ export default class DuplicateDraw extends BaseCanvas {
   #setMaxRadius() {
     this.#speedForMaxRadius *= DuplicateDraw.SETTING_VELOCITY;
 
-    if (this.#maxRadius > DuplicateDraw.MIN_RADIUS + this.#speedForMaxRadius) {
+    if (this.#maxRadius > this.#minRadius + this.#speedForMaxRadius) {
       this.#maxRadius -= this.#speedForMaxRadius;
     }
   }
@@ -130,7 +124,7 @@ export default class DuplicateDraw extends BaseCanvas {
   #drawParticle(particle) {
     let randomRadius;
 
-    randomRadius = Math.random() * this.#maxRadius + DuplicateDraw.MIN_RADIUS;
+    randomRadius = Math.random() * this.#maxRadius + this.#minRadius;
 
     this.beginPath();
     this.setFillStyle(particle.color);
