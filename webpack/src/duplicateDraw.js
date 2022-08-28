@@ -10,7 +10,7 @@ export default class DuplicateDraw extends BaseCanvas {
   static FPS_TIME = 1000 / DuplicateDraw.FPS;
   static SETTING_VELOCITY = 1.03;
 
-  #imageGenerator;
+  #imageGenerator = null;
   #maxParticlesIndex;
   #particles;
   #prevTimeForSpeed;
@@ -20,12 +20,46 @@ export default class DuplicateDraw extends BaseCanvas {
   #maxRadius;
   #minRadius;
 
-  constructor(imgList) {
+  constructor(imageUrls) {
     super();
 
-    this.#imageGenerator = new ImageGenerator(imgList, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
+    const urlList = imageUrls.constructor !== Array ? new Array(imageUrls) : imageUrls; // prettier-ignore
+    let loadedImageCount = 0;
+    let imageList = [];
 
+    urlList.forEach((imageUrl) => {
+      const image = new Image();
+      image.src = imageUrl;
+      image.onload = () => {
+        imageList.push(image);
+        loadedImageCount++;
+
+        const isLoadAllImage = loadedImageCount === urlList.length;
+        if (isLoadAllImage) {
+          this.#imageGenerator = new ImageGenerator(imageList, DuplicateDraw.IMAGE_MOVING_SPEED); // prettier-ignore
+          this.resize();
+        }
+      };
+    });
+  }
+
+  bringToStage() {
     this.resize();
+
+    super.bringToStage();
+    this.#imageGenerator && this.#imageGenerator.bringToStage();
+  }
+
+  removeFromStage() {
+    this.#imageGenerator && this.#imageGenerator.removeFromStage();
+    super.removeFromStage();
+  }
+
+  resize() {
+    super.resize();
+    this.#imageGenerator && this.#imageGenerator.resize();
+
+    this.init();
   }
 
   init() {
@@ -33,38 +67,22 @@ export default class DuplicateDraw extends BaseCanvas {
     this.#circlesPerFrame = 1;
     this.#speedForMaxRadius = 2;
     this.#speedForCirclesPerFrame = 0.2;
-    this.#maxRadius = this.getSizeMode() === BaseCanvas.SMALL_MODE ? 100 : 200;
-    this.#minRadius = this.getSizeMode() === BaseCanvas.SMALL_MODE ? 5 : 10;
+    this.#maxRadius = this.sizeMode === BaseCanvas.SMALL_MODE ? 100 : 200;
+    this.#minRadius = this.sizeMode === BaseCanvas.SMALL_MODE ? 5 : 10;
 
     this.#particles = [];
-    this.#particles = this.#imageGenerator.getImgParticleInfo();
+    this.#imageGenerator && (this.#particles = this.#imageGenerator.getImgParticleInfo()); // prettier-ignore
     this.#maxParticlesIndex =
       this.#particles.length > 1 ? this.#particles.length - 1 : 0;
-  }
-
-  bringToStage() {
-    this.resize();
-
-    super.bringToStage();
-    this.#imageGenerator.bringToStage();
-  }
-
-  removeFromStage() {
-    this.#imageGenerator.removeFromStage();
-    super.removeFromStage();
-  }
-
-  resize() {
-    super.resize();
-    this.#imageGenerator.resize();
-
-    this.init();
   }
 
   animate(curTime) {
     this.#checkFPSTime(curTime);
     this.#drawBackground();
-    this.#imageGenerator.isDisappeared && this.#changeNextImage();
+
+    if (this.#imageGenerator && this.#imageGenerator.isDisappeared) {
+      this.#changeNextImage();
+    }
   }
 
   #checkFPSTime(curTime) {
@@ -102,22 +120,24 @@ export default class DuplicateDraw extends BaseCanvas {
   }
 
   #drawBackground() {
-    if (this.#imageGenerator) {
-      this.#imageGenerator.clearCanvas();
-      this.#imageGenerator.drawMovingImage();
+    if (!this.#imageGenerator) {
+      return;
+    }
 
-      let randomIndex = 0;
-      let particle;
-      let isOnceInTow;
+    this.#imageGenerator.clearCanvas();
+    this.#imageGenerator.drawMovingImage();
 
-      for (let i = 0; i < this.#circlesPerFrame; i++) {
-        randomIndex = Math.round(Math.random() * this.#maxParticlesIndex);
-        particle = this.#particles[randomIndex];
-        isOnceInTow = i % 2;
+    let randomIndex = 0;
+    let particle;
+    let isOnceInTow;
 
-        this.#drawParticle(particle);
-        isOnceInTow && this.#imageGenerator.drawLineToParticle(particle);
-      }
+    for (let i = 0; i < this.#circlesPerFrame; i++) {
+      randomIndex = Math.round(Math.random() * this.#maxParticlesIndex);
+      particle = this.#particles[randomIndex];
+      isOnceInTow = i % 2;
+
+      this.#drawParticle(particle);
+      isOnceInTow && this.#imageGenerator.drawLineToParticle(particle);
     }
   }
 
@@ -126,10 +146,10 @@ export default class DuplicateDraw extends BaseCanvas {
 
     randomRadius = Math.random() * this.#maxRadius + this.#minRadius;
 
-    this.beginPath();
-    this.setFillStyle(particle.color);
-    this.arc(particle.x, particle.y, randomRadius, 0, PI2);
-    this.fill();
+    this.ctx.beginPath();
+    this.ctx.fillStyle = particle.color;
+    this.ctx.arc(particle.x, particle.y, randomRadius, 0, PI2);
+    this.ctx.fill();
   }
 
   #changeNextImage() {

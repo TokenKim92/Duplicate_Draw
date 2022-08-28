@@ -8,9 +8,7 @@ window.onload = () => {
 
 class AppBuilder {
   #app;
-  #imageList = [];
   #imageUrls = [];
-  #imageCount = 0;
 
   imgUrl(imageUrls) {
     this.#imageUrls = imageUrls;
@@ -18,15 +16,9 @@ class AppBuilder {
   }
 
   build() {
-    this.#imageUrls.forEach((imageUrl) => {
-      const img = new Image();
-      img.src = imageUrl;
-      img.onload = () => {
-        this.#imageList.push(img);
-        this.#imageCount++;
-        this.#isLoadAllImage && this.#onLoadAllImage();
-      };
-    });
+    this.#app = new DuplicateDraw(this.#imageUrls);
+    window.requestAnimationFrame(this.animate);
+    window.addEventListener('resize', this.resize);
 
     return this.#app;
   }
@@ -39,14 +31,4 @@ class AppBuilder {
   resize = () => {
     this.#app.resize();
   };
-
-  get #isLoadAllImage() {
-    return this.#imageCount === this.#imageUrls.length;
-  }
-
-  #onLoadAllImage() {
-    this.#app = new DuplicateDraw(this.#imageList);
-    window.requestAnimationFrame(this.animate);
-    window.addEventListener('resize', this.resize);
-  }
 }

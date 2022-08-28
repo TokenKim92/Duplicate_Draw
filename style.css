@@ -18,12 +18,3 @@ body {
   position: relative;
   background-color: black;
 }
-
-canvas {
-  position: absolute;
-}
-
-.canvas-full {
-  width: 100%;
-  height: 100%;
-}

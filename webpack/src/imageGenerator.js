@@ -45,17 +45,15 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   #initFont() {
-    const sizeMode = this.getSizeMode();
-
-    if (sizeMode === this.#prevSizeMode) {
+    if (this.#prevSizeMode === this.sizeMode) {
       return;
     }
 
-    this.#prevSizeMode = sizeMode;
+    this.#prevSizeMode = this.sizeMode;
     let titleFontSize = 0;
     let subTitleFontSize = 0;
 
-    switch (sizeMode) {
+    switch (this.sizeMode) {
       case BaseCanvas.SMALL_MODE:
         titleFontSize = 100;
         subTitleFontSize = 20;
@@ -107,13 +105,13 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   getImgParticleInfo() {
-    this.drawImage(
+    this.ctx.drawImage(
       this.#currentImage,
       0, 0, this.#currentImage.width, this.#currentImage.height,
       0, 0, this.#imgRect.width, this.#imgRect.height
     ); // prettier-ignore
 
-    const imageData = this.getImageData(0, 0, this.#imgRect.width, this.#imgRect.height).data; // prettier-ignore
+    const imageData = this.ctx.getImageData(0, 0, this.#imgRect.width, this.#imgRect.height).data; // prettier-ignore
     let particles = [];
     let pixelIndex;
 
@@ -129,31 +127,33 @@ export default class ImageGenerator extends BaseCanvas {
       }
     }
 
+    this.clearCanvas();
+
     return particles;
   }
 
   drawLineToParticle(particle) {
-    this.saveCanvas();
+    this.ctx.save();
 
-    this.setStrokeStyle(ImageGenerator.LINE_COLOR);
-    this.beginPath();
+    this.ctx.strokeStyle = ImageGenerator.LINE_COLOR;
+    this.ctx.beginPath();
 
     const posOnImage = {
       x : this.#imgRect.x + (particle.x - this.#imgToStageRatio.x) / this.#imgToStageRatio.ratio,
       y: this.#imgRect.y + (particle.y - this.#imgToStageRatio.y) / this.#imgToStageRatio.ratio,
     }; // prettier-ignore
 
-    this.moveTo(particle.x, particle.y);
-    this.lineTo(posOnImage.x, posOnImage.y);
-    this.stroke();
+    this.ctx.moveTo(particle.x, particle.y);
+    this.ctx.lineTo(posOnImage.x, posOnImage.y);
+    this.ctx.stroke();
 
-    this.setFillStyle(particle.color);
-    this.beginPath();
-    this.arc(posOnImage.x, posOnImage.y, 4, 0, PI2);
+    this.ctx.fillStyle = particle.color;
+    this.ctx.beginPath();
+    this.ctx.arc(posOnImage.x, posOnImage.y, 4, 0, PI2);
 
-    this.fill();
+    this.ctx.fill();
 
-    this.restoreCanvas();
+    this.ctx.restore();
   }
 
   drawMovingImage() {
@@ -161,7 +161,7 @@ export default class ImageGenerator extends BaseCanvas {
     this.#drawSubTitle();
     this.#drawBackground();
 
-    this.drawImage(
+    this.ctx.drawImage(
       this.#currentImage,
       0, 0, this.#currentImage.width, this.#currentImage.height,
       this.#imgRect.x, this.#imgRect.y, this.#imgRect.width, this.#imgRect.height
@@ -171,49 +171,49 @@ export default class ImageGenerator extends BaseCanvas {
   }
 
   #drawTitle() {
-    this.saveCanvas();
+    this.ctx.save();
 
-    this.setFont(this.#titleFont.font);
-    this.setFillStyle(ImageGenerator.BG_COLOR);
+    this.ctx.font = this.#titleFont.font;
+    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
 
-    const fontPos = this.measureText(ImageGenerator.TITLE);
-    this.fillText(
+    const fontPos = this.ctx.measureText(ImageGenerator.TITLE);
+    this.ctx.fillText(
       ImageGenerator.TITLE,
       (this.stageWidth - fontPos.width) / 2,
       (this.stageHeight + fontPos.actualBoundingBoxAscent - fontPos.actualBoundingBoxDescent) / 2
     ); // prettier-ignore
 
-    this.restoreCanvas();
+    this.ctx.restore();
   }
 
   #drawSubTitle() {
-    this.saveCanvas();
+    this.ctx.save();
 
-    this.setFont(this.#subTitleFont.font);
-    this.setFillStyle(ImageGenerator.BG_COLOR);
-    this.setTextBaseline('middle');
+    this.ctx.font = this.#subTitleFont.font;
+    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
+    this.ctx.textBaseline = 'middle';
 
-    const fontPos = this.measureText(ImageGenerator.SUB_TITLE);
-    this.fillText(ImageGenerator.SUB_TITLE, (this.stageWidth - fontPos.width) / 2, 50); // prettier-ignore
+    const fontPos = this.ctx.measureText(ImageGenerator.SUB_TITLE);
+    this.ctx.fillText(ImageGenerator.SUB_TITLE, (this.stageWidth - fontPos.width) / 2, 50); // prettier-ignore
 
-    this.restoreCanvas();
+    this.ctx.restore();
   }
 
   #drawBackground() {
-    this.saveCanvas();
+    this.ctx.save();
 
-    this.setFillStyle(ImageGenerator.BG_COLOR);
-    this.fillRect(
+    this.ctx.fillStyle = ImageGenerator.BG_COLOR;
+    this.ctx.fillRect(
       this.#imgRect.x - ImageGenerator.BG_HALF_THICKNESS,
       this.#imgRect.y - ImageGenerator.BG_HALF_THICKNESS,
       this.#imgRect.width + ImageGenerator.BG_THICKNESS,
       this.#imgRect.height + ImageGenerator.BG_THICKNESS
     );
 
-    this.restoreCanvas();
+    this.ctx.restore();
   }
 
   get isDisappeared() {
-    return this.#imgRect.y + this.#imgRect.height * 1.5 < 0;
+    return this.#imgRect.y + this.#imgRect.height * 1.2 < 0;
   }
 }
